@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLASSIFIED — CLASS OF 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --paper: #e8dcc8;
+            --paper-dark: #d4c4a0;
+            --paper-aged: #c8b488;
+            --ink: #1a1208;
+            --ink-faded: #3d3020;
+            --red: #8b1a1a;
+            --red-stamp: #a01010;
+            --green-stamp: #1a5c1a;
+            --folder-brown: #5c4a2a;
+        }
+
+        body {
+            background: #2a2015;
+            font-family: 'Courier Prime', monospace;
+            color: var(--ink);
+            min-height: 100vh;
+            cursor: crosshair;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .classified-banner {
+            background: var(--red);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-family: 'Special Elite', cursive;
+            font-size: 1.1rem;
+            letter-spacing: 12px;
+        }
+
+        .header {
+            background: #1a1208;
+            border-bottom: 3px solid #8b1a1a;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .header-seal {
+            width: 80px; height: 80px;
+            border: 3px solid #8b1a1a;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .header-seal::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border: 1px solid rgba(139,26,26,0.4);
+            border-radius: 50%;
+        }
+
+        .seal-text { color: #8b1a1a; font-size: 0.45rem; letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+
+        .header h1 {
+            font-family: 'Special Elite', cursive;
+            color: var(--paper);
+            font-size: clamp(1.8rem, 5vw, 3.5rem);
+            letter-spacing: 8px;
+            margin-bottom: 5px;
+        }
+
+        .header-sub { color: #8b1a1a; font-size: 0.8rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 10px; }
+        .header-info { color: rgba(232,220,200,0.4); font-size: 0.65rem; letter-spacing: 3px; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 50px 30px; }
+
+        .section-header { text-align: center; margin-bottom: 50px; color: var(--paper-aged); }
+        .section-header p { font-size: 0.7rem; letter-spacing: 5px; text-transform: uppercase; opacity: 0.6; }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        /* ===== FILE CARD ===== */
+        .file-card {
+            background: var(--folder-brown);
+            border-radius: 2px;
+            padding: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease backwards;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .file-card:hover {
+            transform: translateY(-6px) rotate(-0.5deg);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .file-card:hover .file-inner { background: #ede0c8; }
+
+        .folder-tab {
+            background: var(--folder-brown);
+            height: 20px; width: 120px;
+            position: absolute;
+            top: -20px; left: 20px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .file-inner {
+            background: var(--paper);
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        .file-inner::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top left, rgba(139,100,20,0.15), transparent 50%);
+            pointer-events: none;
+        }
+
+        .file-inner::after {
+            content: '';
+            position: absolute;
+            left: 60px; top: 0; bottom: 0;
+            width: 1px;
+            background: rgba(180,100,100,0.3);
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 10px; right: 12px;
+            font-size: 0.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--red);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .file-card:hover .click-hint { opacity: 0.8; }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(26,18,8,0.2);
+        }
+
+        .file-number { font-size: 0.6rem; letter-spacing: 1px; color: var(--ink-faded); line-height: 1.7; }
+
+        .stamp {
+            font-family: 'Special Elite', cursive;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            padding: 3px 8px;
+            border: 3px solid var(--red-stamp);
+            color: var(--red-stamp);
+            transform: rotate(-12deg);
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
+        .stamp.declassified { border-color: var(--green-stamp); color: var(--green-stamp); transform: rotate(-8deg); font-size: 0.75rem; }
+
+        .photo-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-left: 65px;
+        }
+
+        .photo-frame {
+            width: 110px; height: 140px;
+            flex-shrink: 0;
+            border: 2px solid var(--ink-faded);
+            background: var(--paper-dark);
+            overflow: hidden;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .photo-frame img { width: 100%; height: 100%; object-fit: cover; filter: sepia(25%) contrast(1.1); }
+        .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; letter-spacing: 1px; color: var(--ink-faded); text-align: center; opacity: 0.4; text-transform: uppercase; }
+
+        .subject-info { flex-grow: 1; }
+        .subject-label { font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase; color: var(--ink-faded); opacity: 0.6; margin-bottom: 2px; }
+        .subject-name { font-family: 'Special Elite', cursive; font-size: 1.4rem; color: var(--ink); margin-bottom: 10px; line-height: 1.1; }
+
+        .detail-row { display: flex; gap: 6px; font-size: 0.6rem; line-height: 1.9; color: var(--ink-faded); }
+        .detail-label { text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; min-width: 55px; }
+        .detail-value { font-weight: bold; }
+
+        .report-section { padding-left: 65px; margin-bottom: 12px; }
+        .report-label { font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase; color: var(--ink-faded); opacity: 0.6; margin-bottom: 6px; border-bottom: 1px solid rgba(26,18,8,0.12); padding-bottom: 3px; }
+        .report-text { font-size: 0.74rem; line-height: 1.75; color: var(--ink-faded); font-style: italic; }
+
+        .file-footer-row { padding-left: 65px; display: flex; justify-content: space-between; margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(26,18,8,0.1); }
+        .classification-level { font-size: 0.5rem; letter-spacing: 2px; text-transform: uppercase; color: var(--red); opacity: 0.7; }
+        .file-date { font-size: 0.5rem; color: var(--ink-faded); opacity: 0.5; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .file-card:nth-child(1) { animation-delay: 0.05s; }
+        .file-card:nth-child(2) { animation-delay: 0.1s; }
+        .file-card:nth-child(3) { animation-delay: 0.15s; }
+        .file-card:nth-child(4) { animation-delay: 0.2s; }
+        .file-card:nth-child(5) { animation-delay: 0.25s; }
+        .file-card:nth-child(6) { animation-delay: 0.3s; }
+
+        /* ===== PASSWORD MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .password-screen {
+            background: #1a1208;
+            border: 2px solid var(--red);
+            border-radius: 4px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .password-screen.hidden { display: none; }
+
+        .pw-seal {
+            width: 70px; height: 70px;
+            border: 2px solid var(--red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+        }
+
+        .pw-title {
+            font-family: 'Special Elite', cursive;
+            color: var(--paper);
+            font-size: 1.3rem;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .pw-subtitle {
+            color: rgba(232,220,200,0.4);
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 35px;
+        }
+
+        .pw-label {
+            color: rgba(232,220,200,0.6);
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .pw-input-wrapper {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .pw-input {
+            width: 100%;
+            background: rgba(232,220,200,0.08);
+            border: 1px solid rgba(139,26,26,0.5);
+            border-radius: 2px;
+            padding: 14px 45px 14px 16px;
+            color: var(--paper);
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            outline: none;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .pw-input:focus { border-color: var(--red); background: rgba(232,220,200,0.12); }
+
+        .pw-input.error {
+            border-color: #ff4444;
+            animation: shake 0.4s ease;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(232,220,200,0.4);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .pw-toggle:hover { color: rgba(232,220,200,0.8); }
+
+        .pw-error {
+            color: #ff6b6b;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            min-height: 20px;
+            text-align: left;
+        }
+
+        .pw-hint {
+            color: rgba(232,220,200,0.25);
+            font-size: 0.58rem;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .pw-submit {
+            width: 100%;
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-family: 'Special Elite', cursive;
+            font-size: 1rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background 0.2s, transform 0.1s;
+            margin-bottom: 15px;
+        }
+
+        .pw-submit:hover { background: #a01010; }
+        .pw-submit:active { transform: scale(0.98); }
+
+        .pw-cancel {
+            background: none;
+            border: none;
+            color: rgba(232,220,200,0.3);
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+
+        .pw-cancel:hover { color: rgba(232,220,200,0.6); }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        /* ===== LETTER MODAL ===== */
+        .letter-screen {
+            background: #f6f8fc;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: Arial, sans-serif;
+        }
+
+        .letter-screen.hidden { display: none; }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.85) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .gmail-topbar {
+            background: #f6f8fc;
+            padding: 16px 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .gmail-subject-line { font-size: 1.35rem; font-weight: 600; color: #202124; margin-bottom: 12px; }
+
+        .gmail-meta { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
+
+        .gmail-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #4285f4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .gmail-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .gmail-sender-info { flex-grow: 1; }
+        .gmail-sender-name { font-weight: 600; font-size: 0.9rem; color: #202124; }
+        .gmail-sender-email { font-size: 0.75rem; color: #5f6368; }
+        .gmail-time { font-size: 0.75rem; color: #5f6368; }
+
+        .gmail-actions {
+            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f6f8fc;
+        }
+
+        .gmail-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #dadce0;
+            background: white;
+            font-size: 0.8rem;
+            color: #3c4043;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .gmail-btn:hover { background: #f1f3f4; }
+        .gmail-btn.primary { background: #1a73e8; color: white; border-color: #1a73e8; }
+        .gmail-btn.primary:hover { background: #1557b0; }
+
+        .gmail-body { padding: 30px 40px; background: white; }
+
+        .letter-date { text-align: right; font-size: 0.85rem; color: #5f6368; margin-bottom: 30px; font-family: 'Courier Prime', monospace; }
+        .letter-greeting { font-size: 1.1rem; font-weight: 600; color: #202124; margin-bottom: 25px; }
+
+        /* ===== FIX 1: Smaller photo ===== */
+        .letter-photo-container { float: right; margin: 0 0 15px 20px; width: 130px; flex-shrink: 0; }
+        .letter-photo { width: 130px; height: 160px; object-fit: cover; object-position: center top; border-radius: 4px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; }
+        .letter-photo-caption { text-align: center; font-size: 0.65rem; color: #5f6368; margin-top: 5px; font-style: italic; }
+
+        .letter-body-text { font-size: 1rem; line-height: 1.8; color: #3c4043; margin-bottom: 20px; }
+        .letter-clearfix::after { content: ''; display: table; clear: both; }
+
+        .letter-closing { margin-top: 35px; font-size: 1rem; color: #3c4043; }
+        .letter-signature { font-family: 'Dancing Script', cursive; font-size: 2rem; color: #1a73e8; margin-top: 8px; }
+
+        .letter-divider { border: none; border-top: 1px solid #e0e0e0; margin: 30px 0; }
+        .letter-footer-note { font-size: 0.75rem; color: #5f6368; text-align: center; font-style: italic; }
+
+        /* ===== FIX 2: Extra photos grid ===== */
+        .letter-photos-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .letter-extra-photo {
+            width: 120px;
+            height: 150px;
+            object-fit: cover;
+            object-position: center top;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* ===== FIX 3: Music player inside letter ===== */
+        .letter-music-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            padding: 12px 18px;
+            margin-top: 20px;
+        }
+        .letter-play-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #1a73e8;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+        .letter-play-btn:hover { background: #1557b0; transform: scale(1.1); }
+        .letter-play-triangle {
+            width: 0; height: 0;
+            border-left: 11px solid white;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            margin-left: 3px;
+        }
+        .letter-play-btn.playing .letter-play-triangle {
+            border-left: none;
+            width: 10px; height: 10px;
+            border-top: 0; border-bottom: 0;
+            border-left: 3px solid white;
+            border-right: 3px solid white;
+            margin-left: 0;
+        }
+        .letter-song-info { flex-grow: 1; }
+        .letter-song-title { font-size: 0.85rem; font-weight: 600; color: #202124; }
+        .letter-song-artist { font-size: 0.75rem; color: #5f6368; margin-top: 2px; }
+        .letter-song-tag { font-size: 0.6rem; color: #1a73e8; letter-spacing: 1px; margin-top: 2px; }
+
+        .page-footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px;
+            border-top: 1px solid rgba(232,220,200,0.1);
+            color: rgba(232,220,200,0.2);
+            font-size: 0.6rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .files-grid { grid-template-columns: 1fr; }
+            .photo-row { flex-direction: column; padding-left: 0; }
+            .photo-frame { width: 100%; height: 180px; }
+            .report-section, .file-footer-row { padding-left: 0; }
+            .file-inner::after { display: none; }
+            .gmail-body { padding: 20px; }
+            .letter-photo-container { float: none; width: 100%; margin: 0 0 20px 0; }
+            .letter-photo { width: 100%; height: 200px; }
+            .password-screen { padding: 35px 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="classified-banner">⬛ ความลับ ⬛ ขั้นสูงสุด ⬛ ความลับ⬛</div>
+
+    <div class="header">
+        <div class="header-seal">
+            <div class="seal-text">M<br>3<br>/<br>14</div>
+        </div>
+        <h1>ไฟล์ลับของ 3/14</h1>
+        <p class="header-sub">ไฟล์นี้เก็บความลับคนบางคนไว้อยู่</p>
+        <p class="header-info">ไฟล์แสนน่ากลัว &nbsp;|&nbsp; โปรดเก็บไว้เป็นความลับ</p>
+    </div>
+
+    <div class="container">
+        <div class="section-header">
+            <p>⬛ &nbsp; กด file เพื่อเข้าดู file ลับ😈 &nbsp; ⬛</p>
+        </div>
+        <div class="files-grid" id="filesGrid"></div>
+    </div>
+
+    <div class="page-footer">
+        <p>สิ่งนี้คือ file ลับของคนในห้องบางคน &nbsp;|&nbsp; โปรดเก็บไว้เป็นความลับ</p>
+        <p style="margin-top:8px;">M 3/14</p>
+    </div>
+
+    <!-- ===== MODAL OVERLAY ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+
+        <!-- STEP 1: Password Screen -->
+        <div class="password-screen" id="passwordScreen">
+            <div class="pw-seal">🔒</div>
+            <div class="pw-title" id="pwTitle">ต้องใช้รหัสผ่าน</div>
+            <div class="pw-subtitle" id="pwSubtitle">???</div>
+
+            <div class="pw-label">▸ พี่ชายใส่รหัสผ่านเพื่อเข้าก่อน</div>
+            <div class="pw-input-wrapper">
+                <input
+                    type="password"
+                    class="pw-input"
+                    id="pwInput"
+                    placeholder="••••••••"
+                    onkeydown="if(event.key==='Enter') submitPassword()"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button class="pw-toggle" onclick="togglePwVisibility()" id="pwToggle">👁</button>
+            </div>
+
+            <div class="pw-error" id="pwError"></div>
+            <div class="pw-hint">คำใบ้ : ชื่อเล่น (อังกฤษ)</div>
+
+            <button class="pw-submit" onclick="submitPassword()">
+                ปลดล็อก
+            </button>
+            <br>
+            <button class="pw-cancel" onclick="closeModal()">
+                ออก
+            </button>
+        </div>
+
+        <!-- STEP 2: Letter Screen -->
+        <div class="letter-screen hidden" id="letterScreen">
+            <div class="gmail-topbar">
+                <div class="gmail-subject-line" id="modalSubject">จดหมายลับถึงนาย</div>
+                <div class="gmail-meta">
+                    <div class="gmail-avatar" id="modalAvatar"></div>
+                    <div class="gmail-sender-info">
+                        <div class="gmail-sender-name" id="senderName">Stamp</div>
+                        <div class="gmail-sender-email">Stamp@epsteinmail.com</div>
+                    </div>
+                    <div class="gmail-time" id="modalTime"></div>
+                </div>
+            </div>
+
+            <div class="gmail-actions">
+                <button class="gmail-btn primary" onclick="downloadPDF()">โหลดไฟล์</button>
+                <button class="gmail-btn" onclick="lockAndClose()">ปิด</button>
+            </div>
+
+            <div class="gmail-body" id="letterContent"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const YOUR_NAME = "Stamp";
+
+        const classmates = [
+            {
+                name: "Beam",
+                code: "SUBJECT-001",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ลำแสง",
+                statement: "สวัสดีบีม  ปัจฉิมครั้งนี้เราขอให้นายสมหวังกับทุก ๆ อย่างที่ตั้งใจไว้นะ ไม่ว่าจะเป็นเรื่องเรียน เรื่องอนาคต หรือความฝันอะไรก็ตาม ขอให้ทุกก้าวที่เดินเต็มไปด้วยโอกาสดี ๆ และความสำเร็จนะขอให้นายมีความสุขมาก ๆ ยิ้มเยอะ ๆ แบบที่ชอบทำ แล้วก็ขอให้ความรักของนายกับแฟนไปได้ไกล ๆ นาน ๆ จับมือกันแน่น ๆ ผ่านทุกเรื่องไปด้วยกันนะ (ชั้นด้วย)ขอบคุณที่เป็นสุดหล่ออปป้าของห้อง ที่คอยสร้างสีสัน ทำให้บรรยากาศมันสดใสขึ้นเสมอ ขอให้ความหล่อเท่ และความน่ารัก🥵🤑แบบนี้อยู่กับนายตลอดไปเลยนะดูแลตัวเองดี ๆ นะบีม แล้วก็อย่าลืมคิดถึงกันบ้างล่ะ จุ้บ ๆ ๆ ๆ 💋💋💋",
+                song: { title: "1", artist: "Beam", url: "song/Song01.mp3" },
+                photo: "image/33873.jpg",
+                extraPhotos: ["image/BEAM01.jpeg","image/BEAM02.jpeg"]  
+            },
+            {
+                name: "Nut",
+                code: "SUBJECT-002",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "มวลมากมีมาย",
+                statement: "นัทอ้วนมวลมากมีมาย กระชากแดนชาย ปัจฉิมวันนี้ก็ ขอให้นายติด สอวน. ดาราศาสตร์ แบบปัง ๆ สมกับ ลูกแม่เจี๊ยบ ขอให้ข้อสอบออกเรื่องโชติมาตรเยอะ ๆ ตามที่นายหวัง แล้วเดินมาอวดชั้นว่านายเก่งแค่ไหน (ไม่เท่าชั้นอยู่ดี 😏) ขอให้เล่นกีต้าแล้วไม่บอด เล่น pirate of the caribbean เต็มเพลงได้ แล้วก็ที่สำคัญ ขอให้นายสุขภาพแข็งแรง กิน kfc อิ่มๆ นอนพอ ไม่ป่วยง่าย ๆ เป็นหมูอ้วนของแม่",
+                song: { title: "2", artist: "NUT", url: "song/Song02.mp3" },
+                photo: "image/33874.jpg",
+                extraPhotos: ["image/NUT01.jpeg","image/NUT02.jpeg","image/NT03.png"]
+            },
+            {
+                name: "Tun",
+                code: "SUBJECT-003",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ตุนโคตรเก",
+                statement: "สวัสดีตุนท์ 👽👽 ม.ปลายหลังจากนี้ เราขอให้นายได้เจอเพื่อนดี ๆ เยอะ ๆ เลยนะ แบบเยอะมากกกกกกกกก  ขอให้มีแต่คนจริงใจ อยู่ด้วยแล้วสบายใจ ขอให้นายเป็นคนดีของสังคมแบบที่เป็นอยู่แล้ว โตขึ้นไปอย่างมีคุณภาพ เป็นคนที่ใคร ๆ ก็ไว้ใจ แล้วก็เรื่องงานอะนะ… งานไม่คงไม่ค้าง ส่งทันทุกวิชา ไม่ดองการบ้าน ไม่โดนครูตาม ขอให้นายสุขภาพแข็งแรงนะ อย่ากลับไปเป็นแบบเมื่อก่อนอีก ดูแลตัวเองดี ๆ กินข้าวให้ครบ นอนให้พอ เราเป็นห่วงจริง ๆ แล้วก็ขอบคุณมาก ๆ เลยนะ ที่นั่งด้วยกันมาตั้งแต่ ม.1 จนถึง ม.3 ผ่านทั้งเรื่องต่างๆ มันเป็นความทรงจำที่ดี  ต่อไปจะได้นั่งด้วยกันไหมไม่รู้ แต่ยังไงก็ขอให้รู้ว่าเราดีใจนะที่ได้เป็นเพื่อนกัน",
+                song: { title: "3", artist: "TUN", url: "song/Song03.mp3" },
+                photo: "image/33875.jpg",
+                extraPhotos: ["image/TUN01.jpeg","image/TUN02.jpeg"]
+            },
+            {
+                name: "Nut",
+                code: "SUBJECT-004",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "😎",
+                statement: "สวัสดีนัทแว่น 😎😎 ขอบคุณที่เป็นเพื่อนชั้นตอนเรียนพิเศษ ถึงแม้ว่าชั้นจะไม่มาหลายวันแล้วทิ้งนายให้นั่งคนเดียวก็เถอะ ม.ปลายต่อจากนี้ ขอให้นายได้เกรด 4 ทุกวิชา ทำอะไรก็ขอให้สมหวัง ตั้งใจเรื่องไหนก็ขอให้สำเร็จ เรื่องเรียน เรื่องกิจกรรม หรือเรื่องชีวิตส่วนตัวก็ขอให้ผ่านไปได้ด้วยดี ขอให้ยังเป็นนัทแว่นสุดเท่แบบนี้ต่อไป 😎",
+                song: { title: "4", artist: "NUT", url: "song/Song04.mp3" },
+                photo: "image/33876.jpg",
+                extraPhotos: ["image/NV01.jpeg","image/NASG01.jpeg"]
+            },
+            {
+                name: "Poobpub",
+                code: "SUBJECT-005",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ปุ้บปั้บสลับดกมงกุฎทอง",
+                statement: "สวัสดีปุ้บปั้บสลับดกมงกุฎทองวันนี้ไอคอปแกล้งนายได้ไหม ชั้นไม่รู้เหมือนกัน😭😭😭😭😭 ปัจฉิมนี้ ชั้นขออวยพรให้นายติด ไอเจ จะได้บอกได้ว่าข้อสอบ ไอเจ ง่ายมาก😭😭 แล้วปีนี้ก็ขอให้ติดสอวน. เคมีด้วย ขอให้ม.ปลายนายทำอะไรก็ประสบความสำเร็จ แล้วเรียนโหดๆแบบเด็กแสงทอง ขอให้พี่ชายเต้นเพลง kpop โหดๆ ขอให้มี cortisal ตํ่าๆ",
+                song: { title: "5", artist: "POOBPUB", url: "song/Song05.mp3" },
+                photo: "image/33877.jpg",
+                extraPhotos: ["image/PPb01.jpeg"]
+            },
+            {
+                name: "Pokpong",
+                code: "SUBJECT-006",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ปกป้อง🧶🧶",
+                statement: "สวัสดีปกป้อง ขอให้ทุกโปรเจกโครเช ที่นายทำออกมางามๆ ปัจฉิมนี้ขอให้นายทำอะไรก็สมหวัง สอบสอวน. ก็ขอให้ติด จีบใครก็ขอให้ติดละกัน แล้วก็ ไม่ไปปูดนํ้าใส่คนอื่น ขอให้สุขภาพนายแข็งแรงๆ ขอให้มีกล้ามแต่😭😭😭 นั่นแหละ ขอให้มีคนมาจีบนายเยอะๆ แล้วก็ขอให้ติดเตรียมนะไม่รู้ว่านายจะไปไหมเผื่อจะได้มีเพื่อนเป็นเด็กเตรียม",
+                song: { title: "6", artist: "POKPONG", url: "song/Song06.mp3" },
+                photo: "image/33878.jpg",
+                extraPhotos: ["image/PPG02.png"]
+            },
+            {
+                name: "Stamp",
+                code: "SUBJECT-007",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "UNDETERMINED",
+                statement: "TO ME",
+                song: { title: "7", artist: "STAMP", url: "song/Song07.mp3" },
+                photo: "image/33879.jpg",
+                extraPhotos: ["image/STMP01.jpeg"]
+            },
+            {
+                name: "Copter",
+                code: "SUBJECT-008",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "กองทุนหมู่บ้าน",
+                statement: "คอป วันนี้นายแกล้งปั้บได้ไหม😈 เอาเป็นว่าปัจฉิมปีนี้ขอให้พี่กองก่องก๊องก๋องสุขภาพแข็งแรง เรียนหนังสือเก่งๆ ติด TOA TAO เหรียญทอง ขอให้การเก็บเม็ดผ่านไปได้ด้วยดี🥶🥶 เข้าค่ายเสร็จอย่าลืมมาเล่าประสบการณ์นรก ขอให้นายชีวิตม.ปลายนายประสบความสำเร็จทุกอย่าง กินข้าวอิ่มๆ นอนเยอะๆ ยกเว้นในค่ายอะนะ แล้วก็ขอขอบคุณที่นายติดตามเป็นแฟนคลับ ดอกคำใต้คอมพิวเตอร์นะ 😭😭😭",
+                song: { title: "8", artist: "COPTER", url: "song/Song08.mp3" },
+                photo: "image/33880.jpg",
+                extraPhotos: ["image/COPTER02.png"]
+            },
+            {
+                name: "Seagram",
+                code: "SUBJECT-009",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "แกรมสแลมลาแดม",
+                statement: "พี่ซีแกรม ขอบคุณที่รับส่งไปเที่ยวตอนกลางภาคกับปลายภาคครับพรี่แกรมขอให้หลังปัจฉิมพี่แกรมประสบความสำเร็จหลายๆอย่าง สอบอะไรก็ขอให้ติดสุขภาพแข็งแรงไม่มีไข้ได้เจ็บ รํ่าร่วยเงืนทางจ้าวว เงินไหลมาเทมาพรี่ชาย ชีวิตมอ ปลายนี้ต้องดีต่อพี่แน่นอน",
+                song: { title: "9", artist: "SEAGRAM", url: "song/Song09.mp3" },
+                photo: "image/33881.jpg",
+                extraPhotos: ["image/SG01.jpeg","image/NASG01.jpeg"]
+            },
+            {
+                name: "Tonking",
+                code: "SUBJECT-010",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ขิงปิ้ง",
+                statement: "ขิงปิ้ง พี่คนนี่สมัยก่อนสร้างกลุ่ม ราชอาณาจักรปลวกถือว่าโหด หลังปัจฉิมนี้ ขอให้พี่ขิงประสบความสำเร็จ ไม่ไปทะเลาะกับใคร เป็นที่รักของทุกคน รวยๆๆๆ ขอให้ได้เกรด 4 ทุกวิชาตอนม.ปลาย นะพี่ชาย",
+                song: { title: "10", artist: "TONKING", url: "song/Song10.mp3" },
+                photo: "image/33882.jpg",
+                extraPhotos: ["image/TK01.jpeg"]
+            },
+            {
+                name: "Tawan",
+                code: "SUBJECT-011",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ตะวันสุดหล่อ",
+                statement: "พรี่ตะวันสุดหล่อ โหดมากคนนี้ หลังปัจฉิมนี้ขอให้ทุกอย่างประสบความสำเร็จติด mwit จะได้มีเพื่อนเปนเด็ก mwit😭😎 ขอให้ถ้าไปสอบอะไรก็ขอให้ติด สุขภาพแข็งแรง ขอบคุนที่เปนเปื้อนเปิ้นมานานนนน💋💋💋 ไป mwit แล้วบ่ดีลืมกันนนะะะ",
+                song: { title: "11", artist: "TAWAN", url: "song/Song11.mp3" },
+                photo: "image/33883.jpg",
+                extraPhotos: ["image/COP01.jpeg","image/TW02.png"]
+            },
+            {
+                name: "Nammon",
+                code: "SUBJECT-012",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "น้า่มมม้น",
+                statement: "นํ้ามนสุดโหด สอวน ชีวะ เปิ้นได้ยินมาแววแวหว่ววแหววววว ว่าจะเป็น เด็ก mwit ขอหื้อสอบติดนะ ปัจฉิมนี้ขอให้ตัวยังคงเป็นที่รักของทุกคน ขอให้เรียนเก่งอย่างงี้ไปตลอด แล้วก็ขอให้สุขภาพแข็งแรงนะจุ้บๆ💖💖 ขอให้นอนหลับฝันดีทุกวัน กินข้าวอิ่มๆ🎂👽 ไป mwit แล้วบ่ดีลืมกันนะ ",
+                song: { title: "12", artist: "NAMMON", url: "song/Song12.mp3" },
+                photo: "image/33884.jpg",
+                extraPhotos: ["image/NM02.jpeg","image/NM01.png"]
+            },
+            {
+                name: "Boat",
+                code: "SUBJECT-013",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "โบ้ดสโล้ดลาโด้ด",
+                statement: "สวัสดีโบ้ท ตัวตึงหัวหน้าห้อง สอวน คนง คณิต ขอให้พี่เก่งอย่างงี้ไปตลอดนะพี่ชายซักวันเดี๋ยวชวนไปกินหมูกระทะร้านดัง ปัจฉิมปีนี้ขอให้ใช้ชีวิตใน mwit ให้สนุก🤣 ไป mwit แล้วอย่าลืมกันนะะะ ขอให้สุขภาพแข็งแรง อายุมั่นขวัญยืน แล้วก็ตอนไปเข้าค่ายก็ขอให้นอนเต็มอิ่ม ฝันดีทุกคืนแล้วก็ไป tmo นะ แล้วจะรอดู💋🥵",
+                song: { title: "13", artist: "BOAT", url: "song/Song13.mp3" },
+                photo: "image/BOAT01.png",
+                extraPhotos: ["image/BOAT02.PNG","image/BOAT03.PNG"]
+            },
+            {
+                name: "Pleum",
+                code: "SUBJECT-014",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "ceo ขุนนาง",
+                statement: "พี่ปลื้ม สอวน ดาราศาสตร์ ขอให้ติด วมว. นะ ปัจฉิมหลังจากนี้ขอให้ ตัวสุขภาพแข็งแรง เรียนเก่งๆแบบนี้ไปตลอดเรย ขอบคุณที่มาร้องเพลงให้กลุ่มเปิ้นนะะะ นอนหลับฝันดีทุกคืน กินข้าวลำๆเน่อ เงินทองไหลมาเทมา ไป วมว. แล้วบ่ดีลืมกันเน่อออ🌹🌹" ,
+                song: { title: "14", artist: "PLEUM", url: "song/Song14.mp3" },
+                photo: "image/33886.jpg",
+                extraPhotos: ["image/PLM01.png","image/PLM02.PNG"]
+            },
+            {
+                name: "Winner",
+                code: "SUBJECT-015",
+                status: "DECLASSIFIED",
+                role: "tuff",
+                threat: "วินเน้อ",
+                statement: "สวัสดีวินเน้อออ ขอให้พี่ติด วมว. นะขอบคุณพี่วินเนอร์ที่แบกทุกโครงงานของผม🤣 ขอบคุณที่พี่ช่วยครูต่อโปรเจ็คเตอร์ทำให้เรียนต่อได้ตั้งแต่ม.1 หลังปัจฉิมนี้ผมขอให้พี่เรียนเก่งๆๆๆๆๆ รํ่ารวย ได้เงินได้ทอง เงินทองไหลมาเทมา สุขภาพร่างกายแข็งแรงอย่างงี้ไปตลอดเลยๆๆ ไป วมว. แล้วอย่าลืมกันนะพี่ชายยยยยย🤑",
+                song: { title: "15", artist: "WINNER", url: "song/Song15.mp3" },
+                photo: "image/33887.jpg",
+                extraPhotos: ["image/WN01.PNG","image/WN02.PNG"]
+            },
+        ];
+
+        // ============================================================
+        let currentIndex = null;
+        let currentPerson = null;
+        let pwVisible = false;
+
+        // ============================================================
+        // BUILD CARDS
+        // ============================================================
+        function createCard(person, index) {
+            const isClassified = person.status === 'CLASSIFIED';
+            const dates = ['18.02.2569'];
+            const randomDate = dates[index % dates.length];
+
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.onclick = () => openPasswordScreen(index);
+
+            card.innerHTML = `
+                <div class="folder-tab"></div>
+                <div class="file-inner">
+                    <div class="file-header">
+                        <div class="file-number">
+                            <span>M 3/14 ${person.code.split('-')[1]}</span>
+                            <span>ความลับ</span>
+                        </div>
+                        <div class="stamp ${isClassified ? '' : 'declassified'}">
+                            ${isClassified ? 'CLASSIFIED' : 'DECLASSIFIED'}
+                        </div>
+                    </div>
+                    <div class="photo-row">
+                        <div class="photo-frame">
+                            ${person.photo ? `<img src="${person.photo}" alt="${person.name}">` : `<div class="photo-placeholder">Photo<br>Withheld</div>`}
+                        </div>
+                        <div class="subject-info">
+                            <div class="subject-label">Subject Name</div>
+                            <div class="subject-name">${person.name}</div>
+                            <div class="detail-row"><span class="detail-label">CODE:</span><span class="detail-value">${person.code}</span></div>
+                            <div class="detail-row"><span class="detail-label">ROLE:</span><span class="detail-value">${person.role}</span></div>
+                            <div class="detail-row"><span class="detail-label">STATUS:</span><span class="detail-value" style="color:${isClassified ? '#8b1a1a' : '#1a5c1a'}">${person.status}</span></div>
+                            <div class="detail-row"><span class="detail-label">THREAT:</span><span class="detail-value">${person.threat}</span></div>
+                        </div>
+                    </div>
+                    <div class="report-section">
+                        <div class="report-label">▸ Field Notes</div>
+                        <div class="report-text">[???]</div>
+                    </div>
+                    <div class="file-footer-row">
+                        <span class="classification-level">🔒</span>
+                        <span class="file-date">${randomDate}</span>
+                    </div>
+                    <div class="click-hint">▸ CLICK TO UNLOCK</div>
+                </div>
+            `;
+            return card;
+        }
+
+        // ============================================================
+        // PASSWORD SCREEN
+        // ============================================================
+        function openPasswordScreen(index) {
+            currentIndex = index;
+            currentPerson = classmates[index];
+
+            document.getElementById('pwInput').value = '';
+            document.getElementById('pwError').textContent = '';
+            document.getElementById('pwInput').classList.remove('error');
+            document.getElementById('pwTitle').textContent = `File: ${currentPerson.name}`;
+            document.getElementById('pwSubtitle').textContent = `${currentPerson.code} — CLEARANCE REQUIRED`;
+
+            document.getElementById('passwordScreen').classList.remove('hidden');
+            document.getElementById('letterScreen').classList.add('hidden');
+
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(() => document.getElementById('pwInput').focus(), 100);
+        }
+
+        function submitPassword() {
+            const input = document.getElementById('pwInput').value.trim();
+            const correct = currentPerson.name.toLowerCase();
+
+            if (input.toLowerCase() === correct) {
+                document.getElementById('pwInput').style.borderColor = '#1a5c1a';
+                setTimeout(() => openLetter(), 300);
+            } else {
+                const inputEl = document.getElementById('pwInput');
+                const errorEl = document.getElementById('pwError');
+                inputEl.classList.remove('error');
+                void inputEl.offsetWidth;
+                inputEl.classList.add('error');
+                errorEl.textContent = 'รหัสผิด';
+                inputEl.value = '';
+                inputEl.focus();
+            }
+        }
+
+        function togglePwVisibility() {
+            pwVisible = !pwVisible;
+            const input = document.getElementById('pwInput');
+            const toggle = document.getElementById('pwToggle');
+            input.type = pwVisible ? 'text' : 'password';
+            toggle.textContent = pwVisible ? '🙈' : '👁';
+        }
+
+        // ============================================================
+        // LETTER SCREEN
+        // ============================================================
+        function openLetter() {
+            const person = currentPerson;
+            const now = new Date();
+            const timeStr = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) + ', ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+            document.getElementById('modalSubject').textContent = `จดหมายถึง ${person.name} 🎓`;
+            document.getElementById('modalTime').textContent = timeStr;
+            document.getElementById('senderName').textContent = YOUR_NAME;
+
+            const avatarEl = document.getElementById('modalAvatar');
+            if (person.photo) {
+                avatarEl.innerHTML = `<img src="${person.photo}" alt="${person.name}">`;
+            } else {
+                avatarEl.innerHTML = person.name.charAt(0).toUpperCase();
+            }
+
+            // FIX 1: Smaller photo with correct class
+            const photoHtml = person.photo
+                ? `<div class="letter-photo-container">
+                       <img src="${person.photo}" alt="${person.name}" class="letter-photo">
+                       <div class="letter-photo-caption">${person.name} -- M 3/14</div>
+                   </div>`
+                : '';
+
+            // FIX 2: Extra photos grid
+            const extraPhotos = person.extraPhotos || [];
+            const extraPhotosHtml = extraPhotos.length > 0
+                ? `<div class="letter-photos-grid">
+                       ${extraPhotos.map(p => `<img src="${p}" class="letter-extra-photo" alt="${person.name}">`).join('')}
+                   </div>`
+                : '';
+
+            // FIX 3: Music player
+            const musicHtml = person.song.url
+                ? `<div class="letter-music-player">
+                       <button class="letter-play-btn" id="letterPlayBtn" onclick="toggleLetterPlay()">
+                           <div class="letter-play-triangle"></div>
+                       </button>
+                       <div class="letter-song-info">
+                           <div class="letter-song-title">${person.song.title}</div>
+                           <div class="letter-song-artist">${person.song.artist}</div>
+                           <div class="letter-song-tag">🎵 เพลงของนายโดยเฉพาะ</div>
+                       </div>
+                       <audio id="letterAudio" src="${person.song.url}"></audio>
+                   </div>`
+                : `<div class="letter-footer-note" style="margin-top:15px;">🎵 "${person.song.title}" โดย ${person.song.artist}</div>`;
+
+            document.getElementById('letterContent').innerHTML = `
+                <div class="letter-date">
+                    ${now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}
+                </div>
+                <div class="letter-greeting">Dear ${person.name},</div>
+                <div class="letter-clearfix">
+                    ${photoHtml}
+                    <div class="letter-body-text">${person.statement}</div>
+                    <div class="letter-body-text">ขอให้โชคดีตอน ม.ปลาย นะ 🎂🎂</div>
+                </div>
+                ${extraPhotosHtml}
+                ${musicHtml}
+                <hr class="letter-divider">
+                <div class="letter-closing">
+                    คิดถึง🥶,
+                    <div class="letter-signature">${YOUR_NAME}</div>
+                </div>
+                <hr class="letter-divider">
+                <div class="letter-footer-note">
+                    🎓 M 3/14 — จดหมายนี้เขียนถึงนายโดยเฉพาะ
+                </div>
+            `;
+
+            document.getElementById('passwordScreen').classList.add('hidden');
+            document.getElementById('letterScreen').classList.remove('hidden');
+            document.getElementById('letterScreen').scrollTop = 0;
+        }
+
+        // ============================================================
+        // MUSIC PLAYER IN LETTER
+        // ============================================================
+        function toggleLetterPlay() {
+            const audio = document.getElementById('letterAudio');
+            const btn = document.getElementById('letterPlayBtn');
+            if (!audio) return;
+            if (audio.paused) {
+                audio.play().catch(() => alert('ไม่สามารถเล่นเพลงได้ ลองตรวจสอบชื่อไฟล์!'));
+                btn.classList.add('playing');
+            } else {
+                audio.pause();
+                btn.classList.remove('playing');
+            }
+            audio.onended = () => btn.classList.remove('playing');
+        }
+
+        // ============================================================
+        // CLOSE
+        // ============================================================
+        function closeModal() {
+            // Stop music when closing
+            const audio = document.getElementById('letterAudio');
+            if (audio) { audio.pause(); audio.currentTime = 0; }
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+            currentIndex = null;
+            currentPerson = null;
+        }
+
+        function lockAndClose() { closeModal(); }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ============================================================
+        // PDF DOWNLOAD
+        // ============================================================
+        function downloadPDF() {
+            if (!currentPerson) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const person = currentPerson;
+            const now = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+            const pageW = 210;
+            const margin = 25;
+            const contentW = pageW - margin * 2;
+
+            doc.setFillColor(248, 244, 235);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setDrawColor(139, 26, 26);
+            doc.setLineWidth(3);
+            doc.line(0, 18, 210, 18);
+            doc.line(0, 22, 210, 22);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            doc.setTextColor(139, 26, 26);
+            doc.text('TOP SECRET — DECLASSIFIED — CLASS OF 2025', pageW / 2, 12, { align: 'center' });
+
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(100, 80, 50);
+            doc.text(now, pageW - margin, 35, { align: 'right' });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(30, 20, 10);
+            doc.text(`Dear ${person.name},`, margin, 50);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            doc.setTextColor(60, 48, 30);
+            const bodyLines = doc.splitTextToSize(person.statement, contentW);
+            doc.text(bodyLines, margin, 65);
+            let yPos = 65 + bodyLines.length * 6 + 10;
+
+            const extra = 'ขอให้โชคดีตอน ม.ปลาย นะ 🎂';
+            const extraLines = doc.splitTextToSize(extra, contentW);
+            doc.text(extraLines, margin, yPos);
+            yPos += extraLines.length * 6 + 15;
+
+            doc.setDrawColor(200, 180, 140);
+            doc.setLineWidth(0.5);
+            doc.line(margin, yPos, pageW - margin, yPos);
+            yPos += 10;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            doc.setTextColor(60, 48, 30);
+            doc.text('With love and gratitude,', margin, yPos);
+            yPos += 8;
+
+            doc.setFont('helvetica', 'bolditalic');
+            doc.setFontSize(20);
+            doc.setTextColor(26, 115, 232);
+            doc.text(YOUR_NAME, margin, yPos + 10);
+            yPos += 25;
+
+            doc.setDrawColor(200, 180, 140);
+            doc.line(margin, yPos, pageW - margin, yPos);
+            yPos += 8;
+
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(9);
+            doc.setTextColor(120, 100, 70);
+            doc.text(`"${person.song.title}" ของ ${person.song.artist} เพลงของนายโดยเฉพาะ`, pageW / 2, yPos, { align: 'center' });
+
+            doc.setDrawColor(139, 26, 26);
+            doc.setLineWidth(3);
+            doc.line(0, 275, 210, 275);
+            doc.line(0, 279, 210, 279);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            doc.setTextColor(139, 26, 26);
+            doc.text('ความลับสุดยอด 3/14', pageW / 2, 287, { align: 'center' });
+
+            doc.save(`จดหมายถึง${person.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        function init() {
+            const grid = document.getElementById('filesGrid');
+            classmates.forEach((p, i) => grid.appendChild(createCard(p, i)));
+        }
+
+        init();
+    </script>
+</body>
+</html>
